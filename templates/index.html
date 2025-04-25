@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KD EV Charging User Type Prediction</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; max-width: 600px; margin: 20px auto; padding: 15px; border: 1px solid #ccc; border-radius: 8px; }
+        h1 { text-align: center; color: #333; }
+        form div { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 95%; /* Thích ứng với padding */
+            padding: 10px;
+            margin-top: 3px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box; /* Include padding in width */
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            width: 100%; /* Nút chiếm toàn bộ chiều rộng */
+            margin-top: 20px;
+        }
+        button:hover { background-color: #0056b3; }
+        #result { margin-top: 25px; padding: 15px; border: 1px solid #eee; border-radius: 4px; background-color: #f9f9f9; }
+        #result p { margin: 5px 0; }
+        #result ul { padding-left: 20px; margin: 10px 0 0 0; }
+        .error { color: #dc3545; font-weight: bold; }
+        .loading { color: #007bff; }
+    </style>
+</head>
+<body>
+    <h1>Dự đoán Loại Người dùng Sạc Xe Điện (KD Project)</h1>
+    <p>Nhập thông tin phiên sạc để dự đoán UserType.</p>
+
+    <form id="prediction-form">
+
+        <div>
+            <label for="Vehicle_Model">Kiểu Xe (Vehicle Model):</label>
+            <input type="text" id="Vehicle_Model" name="Vehicle Model" required>
+        </div>
+
+        <div>
+            <label for="Battery_Capacity_kWh">Dung lượng Pin (kWh - Battery Capacity (kWh)):</label>
+            <input type="number" step="any" id="Battery_Capacity_kWh" name="Battery Capacity (kWh)" required placeholder="Ví dụ: 60">
+        </div>
+
+        <div>
+            <label for="Charging_Station_Location">Vị trí Trạm Sạc (Charging Station Location):</label>
+            <input type="text" id="Charging_Station_Location" name="Charging Station Location" required>
+        </div>
+
+        <div>
+            <label for="Charging_Start_Time">Thời gian Bắt đầu Sạc (Charging Start Time):</label>
+            <input type="text" id="Charging_Start_Time" name="Charging Start Time" required placeholder="Ví dụ: 2023-01-15 08:30:00">
+        </div>
+
+        <div>
+             <label for="Charging_End_Time">Thời gian Kết thúc Sạc (Charging End Time):</label>
+             <input type="text" id="Charging_End_Time" name="Charging End Time" required placeholder="Ví dụ: 2023-01-15 10:45:00">
+        </div>
+
+        <div>
+             <label for="Energy_Consumed_kWh">Năng lượng Tiêu thụ (kWh - Energy Consumed (kWh)):</label>
+            <input type="number" step="any" id="Energy_Consumed_kWh" name="Energy Consumed (kWh)" required placeholder="Ví dụ: 25.5">
+        </div>
+
+        <div>
+             <label for="Charging_Duration_hours">Thời gian Sạc (Giờ - Charging Duration (hours)):</label>
+             <input type="number" step="any" id="Charging_Duration_hours" name="Charging Duration (hours)" required placeholder="Ví dụ: 2.25">
+        </div>
+
+        <div>
+             <label for="Charging_Rate_kW">Tốc độ Sạc (kW - Charging Rate (kW)):</label>
+            <input type="number" step="any" id="Charging_Rate_kW" name="Charging Rate (kW)" required placeholder="Ví dụ: 7.2">
+        </div>
+
+        <div>
+            <label for="Charging_Cost_USD">Chi phí Sạc (USD - Charging Cost (USD)):</label>
+            <input type="number" step="any" id="Charging_Cost_USD" name="Charging Cost (USD)" required placeholder="Ví dụ: 5.50">
+        </div>
+
+        <div>
+             <label for="Time_of_Day">Buổi trong Ngày (Time of Day):</label>
+             <input type="text" id="Time_of_Day" name="Time of Day" required placeholder="Ví dụ: Morning, Afternoon, Evening">
+        </div>
+
+        <div>
+             <label for="Day_of_Week">Ngày trong Tuần (Day of Week):</label>
+             <input type="text" id="Day_of_Week" name="Day of Week" required placeholder="Ví dụ: Monday, Tuesday">
+        </div>
+
+        <div>
+             <label for="State_of_Charge_Start">Phần trăm Pin lúc Bắt đầu (State of Charge (Start %)):</label>
+             <input type="number" step="any" id="State_of_Charge_Start" name="State of Charge (Start %)" required placeholder="Ví dụ: 20">
+        </div>
+
+        <div>
+            <label for="State_of_Charge_End">Phần trăm Pin lúc Kết thúc (State of Charge (End %)):</label>
+            <input type="number" step="any" id="State_of_Charge_End" name="State of Charge (End %)" required placeholder="Ví dụ: 85">
+        </div>
+
+        <div>
+            <label for="Distance_Driven">Quãng đường Đã đi từ lần sạc trước (km - Distance Driven (since last charge) (km)):</label>
+            <input type="number" step="any" id="Distance_Driven" name="Distance Driven (since last charge) (km)" required placeholder="Ví dụ: 150">
+        </div>
+
+        <div>
+            <label for="Temperature_C">Nhiệt độ (°C - Temperature (°C)):</label>
+            <input type="number" step="any" id="Temperature_C" name="Temperature (°C)" required placeholder="Ví dụ: 28">
+        </div>
+
+        <div>
+            <label for="Vehicle_Age_years">Tuổi Xe (Năm - Vehicle Age (years)):</label>
+            <input type="number" step="1" id="Vehicle_Age_years" name="Vehicle Age (years)" required placeholder="Ví dụ: 3">
+        </div>
+
+        <div>
+            <label for="Charger_Type">Loại Sạc (Charger Type):</label>
+            <input type="text" id="Charger_Type" name="Charger Type" required placeholder="Ví dụ: AC Level 2, DC Fast Charger">
+        </div>
+
+        <hr> <div>
+            <label for="model_choice">Chọn Mô hình Dự đoán:</label>
+            <select id="model_choice" name="model_choice">
+                <option value="knn" selected>K-Nearest Neighbors</option>
+                <option value="dt">Decision Tree</option>
+            </select>
+        </div>
+
+        <button type="submit">Dự đoán UserType</button>
+    </form>
+
+    <div id="result">
+        <p>Kết quả sẽ hiển thị ở đây sau khi bạn nhập thông tin và nhấn nút dự đoán.</p>
+    </div>
+
+    <script>
+        const form = document.getElementById('prediction-form');
+        const resultDiv = document.getElementById('result');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Ngăn form gửi theo cách truyền thống
+            resultDiv.innerHTML = '<p class="loading">Đang xử lý và dự đoán...</p>'; // Thông báo chờ
+
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData // Gửi dữ liệu form
+                });
+
+                // Cố gắng đọc response dưới dạng JSON bất kể response.ok hay không
+                const data = await response.json();
+
+                if (!response.ok) {
+                    // Nếu server trả về lỗi (status code không phải 2xx), hiển thị lỗi từ JSON
+                    throw new Error(data.error || `Lỗi HTTP ${response.status}: Không thể đọc thông báo lỗi.`);
+                }
+
+                // Hiển thị kết quả thành công
+                resultDiv.innerHTML = `
+                    <p><strong>Kết quả Dự đoán:</strong></p>
+                    <ul>
+                        <li>Loại Người dùng Dự đoán: <strong>${data.prediction}</strong></li>
+                        <li>Độ tin cậy (ước tính): ${data.probability}</li>
+                        <li>Mô hình đã sử dụng: ${data.model_used}</li>
+                    </ul>
+                `;
+                resultDiv.classList.remove('error', 'loading');
+
+            } catch (error) {
+                console.error('Error during fetch or JSON parsing:', error);
+                // Hiển thị lỗi
+                let errorMessage = error.message;
+                if (error instanceof SyntaxError) {
+                    errorMessage = "Lỗi nhận phản hồi từ server. Server không trả về định dạng JSON hợp lệ.";
+                }
+                resultDiv.innerHTML = `<p class="error">Đã xảy ra lỗi: ${errorMessage}</p>`;
+                resultDiv.classList.add('error');
+                resultDiv.classList.remove('loading');
+            }
+        });
+    </script>
+</body>
+</html>
